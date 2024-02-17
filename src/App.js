@@ -4,7 +4,6 @@ import "bootstrap/dist/js/bootstrap.bundle";
 import React, { useEffect, useState } from "react";
 import TimeAgo from "timeago-react";
 import SocialAccount from "./components/SocialAccount/SocialAccount";
-import { keysToCamel } from "./data/utils";
 import TokenBalance from "./components/token/TokenBalance";
 import Big from "big.js";
 import TokenBadge from "./components/token/TokenBadge";
@@ -18,9 +17,7 @@ const DefaultTokenId = "token.burrow.near";
 const defaultBurrowFilter = {
   status: "SUCCESS",
   account_id: ContractId,
-  event: {
-    standard: "burrow",
-  },
+  standard: "burrow",
 };
 
 function makeFilter(filterAccountId, filterLiquidations) {
@@ -29,13 +26,13 @@ function makeFilter(filterAccountId, filterLiquidations) {
       makeFilter(null, filterLiquidations),
       makeFilter(null, filterLiquidations),
     ];
-    filter[0].event.data = [{ account_id: filterAccountId }];
-    filter[1].event.data = [{ liquidation_account_id: filterAccountId }];
+    filter[0].data_account_id = filterAccountId;
+    filter[1].data_liquidation_account_id = filterAccountId;
     return filter;
   } else {
     let filter = JSON.parse(JSON.stringify(defaultBurrowFilter));
     if (filterLiquidations) {
-      filter.event.event = "liquidate";
+      filter.event = "liquidate";
     }
     return filter;
   }
@@ -99,10 +96,15 @@ function listenToBurrow(processEvents) {
 function processEvent(event) {
   return {
     index: globalIndex++,
-    time: new Date(parseFloat(event.blockTimestamp) / 1e6),
-    accountId: event.event.data[0].accountId,
-    event: event.event.event,
-    data: event.event.data[0],
+    time: new Date(event.block_timestamp * 1000),
+    accountId: event.data_account_id,
+    event: event.event,
+    data: {
+      accountId: event.data_account_id,
+      tokenId: event.data_token_id,
+      liquidationAccountId: event.data_liquidation_account_id,
+      amount: event.data_amount,
+    },
   };
 }
 
@@ -117,7 +119,7 @@ function App() {
 
   useEffect(() => {
     const processEvents = (events) => {
-      events = events.map(keysToCamel).flatMap(processEvent);
+      events = events.flatMap(processEvent);
       events.reverse();
 
       setBurrowActions((prevState) => {
@@ -165,18 +167,7 @@ function App() {
         return (
           <>
             <div>
-              Liquidation! Profit{" "}
-              <span className="font-monospace fw-bold">
-                <span className="text-secondary">$</span>
-                <MutedDecimals
-                  value={(
-                    parseFloat(action.data.collateralSum) -
-                    parseFloat(action.data.repaidSum)
-                  ).toFixed(2)}
-                />
-              </span>
-              {}
-              :
+              Liquidation!
               <br />
               <SocialAccount
                 accountId={action.data.liquidationAccountId}
