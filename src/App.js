@@ -69,8 +69,8 @@ function listenToBurrow(processEvents) {
     return;
   }
 
-  // ws = new WebSocket("wss://events.near.stream/ws");
-  ws = new WebSocket("ws://localhost:3006/ws");
+  ws = new WebSocket("wss://events.near.stream/ws");
+  // ws = new WebSocket("ws://localhost:3006/ws");
 
   ws.onopen = () => {
     console.log(`Connection to WS has been established`);
