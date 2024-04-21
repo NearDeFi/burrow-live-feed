@@ -17,7 +17,7 @@ const DefaultTokenId = "token.burrow.near";
 
 const defaultBurrowFilter = {
   status: "SUCCESS",
-  account_id: ContractId,
+  accountId: ContractId,
   event: {
     standard: "burrow",
   },
@@ -69,7 +69,8 @@ function listenToBurrow(processEvents) {
     return;
   }
 
-  ws = new WebSocket("wss://events.near.stream/ws");
+  // ws = new WebSocket("wss://events.near.stream/ws");
+  ws = new WebSocket("ws://localhost:3006/ws");
 
   ws.onopen = () => {
     console.log(`Connection to WS has been established`);
@@ -99,7 +100,7 @@ function listenToBurrow(processEvents) {
 function processEvent(event) {
   return {
     index: globalIndex++,
-    time: new Date(parseFloat(event.blockTimestamp) / 1e6),
+    time: new Date(event.blockTimestampMs),
     accountId: event.event.data[0].accountId,
     event: event.event.event,
     data: event.event.data[0],
